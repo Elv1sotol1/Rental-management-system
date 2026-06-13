@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.routers import auth, units, tenants, payments, mpesa, billing, dashboard, reports
+from app.scheduler import start_scheduler, stop_scheduler
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,6 +28,17 @@ app.include_router(mpesa.router, prefix="/api/v1/mpesa", tags=["M-Pesa"])
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
 app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Dashboard"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
+
+
+@app.on_event("startup")
+def on_startup():
+    start_scheduler()
+
+
+@app.on_event("shutdown")
+def on_shutdown():
+    stop_scheduler()
+
 
 @app.get("/")
 def root():

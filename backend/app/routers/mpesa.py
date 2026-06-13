@@ -126,6 +126,17 @@ async def mpesa_callback(request: Request, db: Session = Depends(get_db)):
         db.add(payment)
         db.commit()
 
+        from app.services.sms_service import send_payment_confirmation
+        send_payment_confirmation(
+            tenant_id=tenant.id,
+            phone=phone_raw,
+            name=tenant.name,
+            amount=float(amount),
+            balance=tenant.balance,
+            receipt=receipt_number,
+            db=db
+        )
+
         logger.info(f"Payment confirmed for {tenant.name} — KES {amount} — Receipt {receipt_number}")
         return {"ResultCode": 0, "ResultDesc": "Accepted"}
 

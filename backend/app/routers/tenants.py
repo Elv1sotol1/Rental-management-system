@@ -26,12 +26,23 @@ def create_tenant(
     ).first()
     if existing_tenant:
         raise HTTPException(status_code=400, detail="Unit is already occupied")
+
     tenant = Tenant(**payload.model_dump(), balance=unit.rent_amount)
     db.add(tenant)
     db.commit()
     db.refresh(tenant)
-    return tenant
 
+    from app.services.sms_service import send_onboarding_sms
+    send_onboarding_sms(
+        tenant_id=tenant.id,
+        phone=tenant.phone_number,
+        name=tenant.name,
+        unit=unit.unit_number,
+        lease_start=str(payload.lease_start_date),
+        lease_end=str(payload.lease_end_date),
+        db=db
+    )
+    return tenant
 
 @router.get("/", response_model=List[TenantResponse])
 def get_tenants(
