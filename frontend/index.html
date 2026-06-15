@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RMS — Control Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* ─── RESET ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+    /* ─── SIDEBAR ─── */
+    #sidebar {
+      width: 256px;
+      min-width: 256px;
+      background: #0f172a;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.28s cubic-bezier(.4,0,.2,1),
+                  min-width 0.28s cubic-bezier(.4,0,.2,1);
+      overflow: hidden;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 50;
+    }
+    #sidebar.collapsed {
+      width: 80px;
+      min-width: 80px;
+    }
+
+    /* brand row */
+    .sb-brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 16px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      gap: 10px;
+    }
+    .sb-brand-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+      min-width: 0;
+    }
+    .sb-logo {
+      width: 36px; height: 36px;
+      background: #d97706;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(217,119,6,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px; color: #fff;
+      flex-shrink: 0;
+      letter-spacing: -0.5px;
+    }
+    .sidebar-text {
+      overflow: hidden;
+      white-space: nowrap;
+      transition: opacity 0.2s, width 0.28s;
+      width: auto;
+    }
+    #sidebar.collapsed .sidebar-text {
+      opacity: 0;
+      width: 0;
+      pointer-events: none;
+    }
+    .sb-brand-name {
+      font-size: 14px; font-weight: 700;
+      color: #f1f5f9;
+      line-height: 1.2;
+    }
+    .sb-brand-sub {
+      font-size: 10px; font-weight: 400;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-top: 1px;
+    }
+    .sb-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      min-height: 28px;
+      background: rgba(255,255,255,0.05);
+      border: none;
+      border-radius: 8px;
+      color: #94a3b8;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sb-toggle:hover { background: rgba(255,255,255,0.1); color: #f1f5f9; }
+
+    /* search */
+    .sb-search {
+      padding: 12px 14px 8px;
+    }
+    .sb-search-wrap {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 8px 11px;
+      transition: border-color 0.2s;
+    }
+    .sb-search-wrap:focus-within {
+      border-color: rgba(217,119,6,0.5);
+    }
+    .sb-search-wrap i { color: #475569; font-size: 12px; flex-shrink: 0; }
+    .sb-search-wrap input {
+      background: none; border: none; outline: none;
+      font-size: 12px; color: #cbd5e1; font-family: inherit;
+      width: 100%;
+    }
+    .sb-search-wrap input::placeholder { color: #475569; }
+    #sidebar.collapsed .sb-search { display: none; }
+
+    /* nav */
+    .sb-nav {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 8px 10px;
+    }
+    .sb-section-label {
+      font-size: 9.5px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: #334155;
+      padding: 10px 8px 4px;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    #sidebar.collapsed .sb-section-label { opacity: 0; height: 0; padding: 0; overflow: hidden; }
+
+    .nav-link {
+      display: flex; align-items: center; gap: 11px;
+      padding: 9px 10px;
+      border-radius: 12px;
+      color: #94a3b8;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none; background: none;
+      width: 100%; text-align: left;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+      margin-bottom: 2px;
+    }
+    .nav-link i {
+      font-size: 14px; width: 18px;
+      text-align: center; flex-shrink: 0;
+      color: #475569;
+      transition: color 0.15s;
+    }
+    .nav-link .sidebar-text { font-size: 13px; font-weight: 500; }
+    .nav-link:hover { background: rgba(255,255,255,0.05); color: #e2e8f0; }
+    .nav-link:hover i { color: #94a3b8; }
+    .nav-link.active {
+      background: #1e293b;
+      color: #fff;
+      font-weight: 600;
+    }
+    .nav-link.active i { color: #f59e0b; }
+
+    /* footer profile */
+    .sb-footer {
+      padding: 12px 10px 16px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .sb-profile {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(30,41,59,0.4);
+      border: 1px solid rgba(30,41,59,0.6);
+      padding: 10px 12px;
+      border-radius: 14px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .sb-avatar {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg,#d97706,#b45309);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .sb-profile-meta { flex: 1; overflow: hidden; }
+    .sb-profile-name { font-size: 12px; font-weight: 600; color: #f1f5f9; }
+    .sb-profile-role { font-size: 10px; color: #475569; }
+    .sb-logout {
+      background: none; border: none;
+      color: #475569; cursor: pointer;
+      padding: 3px; border-radius: 4px;
+      transition: color 0.15s; flex-shrink: 0;
+    }
+    .sb-logout:hover { color: #ef4444; }
+    #sidebar.collapsed .sb-profile-meta,
+    #sidebar.collapsed .sb-logout { display: none; }
+    #sidebar.collapsed .sb-profile { justify-content: center; padding: 8px; }
+
+    /* ─── MAIN ─── */
+    #main {
+      flex: 1; display: flex; flex-direction: column;
+      overflow: hidden; min-width: 0;
+      background: #f8fafc;
+    }
+
+    /* topbar */
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid #f1f5f9;
+      padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+    }
+    .topbar-left h1 {
+      font-size: 17px; font-weight: 700;
+      color: #0f172a; letter-spacing: -0.3px;
+    }
+    .topbar-left p { font-size: 12px; color: #94a3b8; margin-top: 1px; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .topbar-icon-btn {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      border: 1px solid #f1f5f9;
+      background: #fff;
+      color: #94a3b8; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; transition: all 0.15s;
+    }
+    .topbar-icon-btn:hover { border-color: #f59e0b; color: #f59e0b; }
+
+    /* workspace */
+    .workspace {
+      flex: 1; overflow-y: auto; padding: 24px 28px;
+    }
+
+    /* ─── METRIC CARDS ─── */
+    .metrics-grid {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 16px; margin-bottom: 24px;
+    }
+    .metric-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 22px 20px 18px;
+      box-shadow: 0 1px 3px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.03);
+      transition: box-shadow 0.2s, transform 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .metric-card:hover { box-shadow: 0 8px 24px rgba(15,23,42,0.08); transform: translateY(-2px); }
+   .metric-card::before { display: none; }
+    .mc-amber::before { background: linear-gradient(90deg,#f59e0b,#fbbf24); }
+    .mc-blue::before  { background: linear-gradient(90deg,#3b82f6,#60a5fa); }
+    .mc-rose::before  { background: linear-gradient(90deg,#f43f5e,#fb7185); }
+    .mc-emerald::before { background: linear-gradient(90deg,#10b981,#34d399); }
+
+    .metric-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .metric-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .mi-amber   { background: #fffbeb; color: #d97706; }
+    .mi-blue    { background: #eff6ff; color: #3b82f6; }
+    .mi-rose    { background: #fff1f2; color: #f43f5e; }
+    .mi-emerald { background: #ecfdf5; color: #10b981; }
+
+    .metric-value {
+      font-size: 28px; font-weight: 800; color: #0f172a;
+      letter-spacing: -0.04em; line-height: 1;
+      margin-bottom: 5px; font-variant-numeric: tabular-nums;
+    }
+    .metric-label { font-size: 12px; color: #94a3b8; font-weight: 500; }
+    .metric-trend {
+      font-size: 11px; margin-top: 10px;
+      display: flex; align-items: center; gap: 4px;
+      color: #94a3b8;
+    }
+
+    /* ─── SPLIT LAYOUT ─── */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ─── PANEL / CARD ─── */
+    .panel {
+      background: #fff;
+      border: 1px solid #f1f5f9;
+      border-radius: 20px;
+      box-shadow: 0 1px 3px rgba(15,23,42,0.05);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid #f8fafc;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; font-weight: 700; color: #0f172a;
+    }
+    .panel-title-icon {
+      width: 30px; height: 30px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+    }
+    .pti-amber   { background: #fffbeb; color: #d97706; }
+    .pti-blue    { background: #eff6ff; color: #3b82f6; }
+    .pti-slate   { background: #f8fafc; color: #475569; }
+    .panel-body  { padding: 20px; }
+
+    /* ─── TABLE ─── */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 10.5px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: #94a3b8;
+      background: #fafafa;
+      border-bottom: 1px solid #f1f5f9;
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid #f8fafc;
+      transition: background 0.12s; cursor: pointer;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #fafafa; }
+    tbody td { padding: 13px 16px; vertical-align: middle; }
+
+    .t-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .t-cell { display: flex; align-items: center; gap: 10px; }
+    .t-name { font-weight: 600; color: #0f172a; font-size: 13px; }
+    .t-sub  { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 99px;
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+    }
+    .badge-blue    { background: #eff6ff; color: #3b82f6; }
+    .badge-green   { background: #f0fdf4; color: #16a34a; }
+    .badge-red     { background: #fff1f2; color: #e11d48; }
+    .badge-amber   { background: #fffbeb; color: #d97706; }
+    .badge-slate   { background: #f8fafc; color: #64748b; border: 1px solid #f1f5f9; }
+
+    .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .dot-green  { background: #d97706; }
+    .dot-red    { background: #ef4444; }
+    .dot-amber  { background: #f59e0b; }
+
+    .bal-debt   { font-weight: 700; color: #e11d48; }
+    .bal-clear  { font-weight: 600; color: #94a3b8; }
+    .bal-credit { font-weight: 700; color: #d97706; }
+
+    .tbl-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #f8fafc;
+      background: #fafafa;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 11px; color: #94a3b8;
+      border-radius: 0 0 20px 20px;
+    }
+
+    /* action buttons */
+    .act-row { display: flex; gap: 5px; }
+    .act {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px;
+      border-radius: 8px; border: none;
+      font-size: 11px; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: all 0.12s;
+    }
+    .act-green  { background: #f0fdf4; color: #16a34a; }
+    .act-green:hover { background: #16a34a; color: #fff; }
+    .act-blue   { background: #eff6ff; color: #3b82f6; }
+    .act-blue:hover  { background: #3b82f6; color: #fff; }
+    .act-red    { background: #fff1f2; color: #e11d48; }
+    .act-red:hover   { background: #e11d48; color: #fff; }
+
+    /* expand row */
+    .expand-row { display: none; }
+    .expand-row.open { display: table-row; }
+    .expand-body { background: #fafafa; border-top: 1px solid #f1f5f9; }
+    .expand-inner { padding: 16px 20px; }
+    .expand-title {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: #94a3b8; margin-bottom: 12px;
+    }
+    .hist-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px;
+    }
+    .hist-row:last-child { border-bottom: none; }
+    .hist-date    { font-weight: 600; color: #0f172a; }
+    .hist-ref     { font-size: 10px; color: #94a3b8; font-family: monospace; margin-top: 2px; }
+    .hist-amount  { font-weight: 700; color: #d97706; }
+    .expand-empty { color: #94a3b8; font-size: 12px; text-align: center; padding: 14px 0; }
+
+    /* ─── FORMS (right col) ─── */
+    .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block; font-size: 11px; font-weight: 600;
+      color: #475569; margin-bottom: 5px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .form-input {
+      width: 100%;
+      padding: 10px 13px;
+      background: rgba(248,250,252,0.5);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 13px; color: #0f172a; font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+    }
+    .form-input:focus {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 4px rgba(245,158,11,0.1);
+    }
+    .form-input::placeholder { color: #cbd5e1; }
+    .form-input.err { border-color: #e11d48; box-shadow: 0 0 0 4px rgba(225,29,72,0.08); }
+    .form-err { font-size: 11px; color: #e11d48; margin-top: 4px; display: none; }
+    .form-err.show { display: block; }
+
+    /* enterprise dark button */
+    .btn-enterprise {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 11px 16px;
+      background: #0f172a;
+      color: #fff;
+      border: none; border-radius: 12px;
+      font-size: 12px; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: background 0.15s, transform 0.12s;
+    }
+    .btn-enterprise:hover { background: #1e293b; transform: translateY(-1px); }
+
+    .btn-amber {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 11px 16px;
+      background: #d97706;
+      color: #fff;
+      border: none; border-radius: 12px;
+      font-size: 12px; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: background 0.15s, transform 0.12s;
+      box-shadow: 0 4px 12px rgba(217,119,6,0.2);
+    }
+    .btn-amber:hover { background: #b45309; transform: translateY(-1px); }
+
+    .btn-outline {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 9px 18px;
+      background: #fff; color: #475569;
+      border: 1px solid #e2e8f0; border-radius: 10px;
+      font-size: 13px; font-weight: 500; font-family: inherit;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-outline:hover { border-color: #f59e0b; color: #d97706; }
+
+    /* tbl search */
+    .tbl-search-box {
+      display: flex; align-items: center; gap: 7px;
+      background: #f8fafc; border: 1px solid #f1f5f9;
+      border-radius: 10px; padding: 6px 11px;
+      transition: border-color 0.2s;
+    }
+    .tbl-search-box:focus-within { border-color: #f59e0b; }
+    .tbl-search-box i { color: #cbd5e1; font-size: 11px; }
+    .tbl-search-box input {
+      background: none; border: none; outline: none;
+      font-size: 12px; color: #0f172a; font-family: inherit; width: 150px;
+    }
+    .tbl-search-box input::placeholder { color: #cbd5e1; }
+
+    /* ─── MODAL / OVERLAY ─── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.5);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: #fff; border-radius: 20px;
+      box-shadow: 0 25px 60px rgba(15,23,42,0.15);
+      width: 420px; max-width: 95vw; padding: 28px;
+      transform: scale(0.95) translateY(10px);
+      transition: transform 0.22s;
+      border: 1px solid #f1f5f9;
+    }
+    .overlay.open .modal-box { transform: scale(1) translateY(0); }
+    .modal-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+    .modal-icon {
+      width: 38px; height: 38px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+    }
+    .modal-title { font-size: 16px; font-weight: 700; color: #0f172a; }
+    .modal-sub   { font-size: 12px; color: #94a3b8; margin-bottom: 20px; margin-left: 50px; }
+    .modal-info  {
+      background: #f8fafc; border: 1px solid #f1f5f9;
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 18px;
+    }
+    .modal-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 4px 0; font-size: 13px;
+    }
+    .modal-row-label { color: #94a3b8; }
+    .modal-row-val   { font-weight: 600; color: #0f172a; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-actions > * { flex: 1; }
+
+    /* ─── TOAST ─── */
+    #toasts {
+      position: fixed; top: 18px; right: 20px;
+      z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 13px 16px;
+      background: #fff;
+      border: 1px solid #f1f5f9;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(15,23,42,0.1);
+      min-width: 280px; max-width: 360px;
+      font-size: 13px; color: #1e293b;
+      animation: tslide 0.3s ease;
+      border-left: 3px solid;
+    }
+    .toast.ts { border-left-color: #10b981; }
+    .toast.te { border-left-color: #e11d48; }
+    .toast.ti { border-left-color: #3b82f6; }
+    .toast i  { margin-top: 1px; font-size: 14px; flex-shrink: 0; }
+    .toast.ts i { color: #10b981; }
+    .toast.te i { color: #e11d48; }
+    .toast.ti i { color: #3b82f6; }
+    @keyframes tslide { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes tslideout { to { transform: translateX(110%); opacity: 0; } }
+
+    /* ─── SPINNER ─── */
+    .spin {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(217,119,6,0.2);
+      border-top-color: #d97706;
+      border-radius: 50%;
+      animation: spinning 0.55s linear infinite;
+      display: inline-block; flex-shrink: 0;
+    }
+    @keyframes spinning { to { transform: rotate(360deg); } }
+
+    /* ─── EMPTY ─── */
+    .empty-state {
+      text-align: center; padding: 52px 20px; color: #94a3b8;
+    }
+    .empty-state i { font-size: 30px; opacity: 0.25; margin-bottom: 12px; display: block; }
+    .empty-state p { font-size: 13px; font-weight: 500; }
+    .empty-state small { font-size: 12px; margin-top: 4px; display: block; opacity: 0.7; }
+
+    /* ─── LOGIN ─── */
+    .login-shell {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: #f8fafc;
+      width: 100%; padding: 24px;
+    }
+    .login-card {
+      background: #fff;
+      border: 1px solid #f1f5f9;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(15,23,42,0.08);
+      width: 380px; padding: 42px 36px;
+    }
+    .login-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .login-title { font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.4px; margin-bottom: 4px; }
+    .login-sub   { font-size: 13px; color: #94a3b8; margin-bottom: 28px; }
+    .login-err {
+      background: #fff1f2; border: 1px solid #fecdd3;
+      color: #e11d48; border-radius: 10px;
+      padding: 10px 13px; font-size: 12px;
+      margin-bottom: 14px; display: none;
+    }
+
+    /* ─── PAGES ─── */
+    .page-cards-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1100px) {
+      .metrics-grid { grid-template-columns: repeat(2,1fr); }
+      .split { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .metrics-grid { grid-template-columns: 1fr; }
+      .workspace { padding: 14px; }
+      .topbar { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside id="sidebar">
+
+  <div class="sb-brand">
+    <div class="sb-brand-left">
+      <div class="sb-logo">R</div>
+      <div class="sidebar-text">
+        <div class="sb-brand-name">Abisaki's RMS</div>
+        <div class="sb-brand-sub">Property Manager</div>
+      </div>
+    </div>
+    <button class="sb-toggle" onclick="toggleSidebar()" title="Toggle menu">
+      <i class="fa-solid fa-bars" style="font-size:13px"></i>
+    </button>
+  </div>
+
+  <div class="sb-search">
+    <div class="sb-search-wrap">
+      <i class="fa fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search tenants…" id="gSearch" oninput="filterTenants(this.value)"/>
+    </div>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-section-label">Workspace</div>
+    <button class="nav-link active" onclick="navTo('dashboard',this)">
+      <i class="fa fa-chart-pie"></i>
+      <span class="sidebar-text">Control Panel</span>
+    </button>
+  </nav>
+
+  <div class="sb-footer">
+    <div class="sb-profile">
+      <div class="sb-avatar" id="uAvatar">A</div>
+      <div class="sb-profile-meta">
+        <div class="sb-profile-name" id="uName">Administrator</div>
+        <div class="sb-profile-role">Property Manager</div>
+      </div>
+      <button class="sb-logout" onclick="doLogout()" title="Sign out">
+        <i class="fa fa-arrow-right-from-bracket" style="font-size:13px"></i>
+      </button>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 id="pgTitle">Control Panel</h1>
+      <p  id="pgSub">Your property portfolio at a glance</p>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-icon-btn" onclick="refreshCurrent()" title="Refresh data">
+        <i class="fa fa-arrows-rotate"></i>
+      </button>
+      <button class="topbar-icon-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle theme"
+        style="border-radius:12px;border:1px solid #e2e8f0;background:#fff;">
+        <i class="fa-regular fa-moon" id="themeIcon"></i>
+      </button>
+    </div>
+  </div>
+  <div class="workspace" id="ws"></div>
+</div>
+
+<!-- ══ STK MODAL ══ -->
+<div class="overlay" id="stkOverlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-icon pti-amber"><i class="fa fa-mobile-screen-button"></i></div>
+      <div class="modal-title">Send M-Pesa Request</div>
+    </div>
+    <div class="modal-sub">An STK push notification will be sent to the tenant's phone</div>
+    <div class="modal-info">
+      <div class="modal-row"><span class="modal-row-label">Tenant</span><span class="modal-row-val" id="mName">—</span></div>
+      <div class="modal-row"><span class="modal-row-label">Phone</span><span class="modal-row-val" id="mPhone">—</span></div>
+      <div class="modal-row"><span class="modal-row-label">Outstanding</span><span class="modal-row-val" id="mBal">—</span></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Amount (KES)</label>
+      <input class="form-input" type="number" id="stkAmt" placeholder="Enter amount to collect" min="1"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeOverlay('stkOverlay')">Cancel</button>
+      <button class="btn-amber" id="stkBtn" onclick="sendSTK()" style="border-radius:12px">
+        <i class="fa fa-paper-plane"></i> Send Push
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIRM MODAL ══ -->
+<div class="overlay" id="cfmOverlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-icon" style="background:#fff1f2;color:#e11d48"><i class="fa fa-triangle-exclamation"></i></div>
+      <div class="modal-title" id="cfmTitle">Confirm Action</div>
+    </div>
+    <div class="modal-sub" id="cfmMsg">This action cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeOverlay('cfmOverlay')">Cancel</button>
+      <button class="btn-enterprise" id="cfmOk" style="border-radius:12px">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOASTS ══ -->
+<div id="toasts"></div>
+
+<script>
+  /* ── CONFIG ── */
+  const API = 'http://localhost:8000/api/v1';
+  let TOKEN   = localStorage.getItem('rms_token') || '';
+  let curPage = 'dashboard';
+  let tenants = [];
+  let stkId   = null;
+
+  /* ── BOOT ── */
+  window.onload = () => {
+    if (!TOKEN) { renderLogin(); return; }
+    boot();
+  };
+
+  function boot() {
+    document.getElementById('sidebar').style.display = 'flex';
+    loadPage('dashboard');
+  }
+
+  /* ── API ── */
+  async function req(method, path, body) {
+    const r = await fetch(`${API}${path}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {})
+      },
+      ...(body ? { body: JSON.stringify(body) } : {})
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Request failed');
+    return d;
+  }
+
+  /* ── LOGIN ── */
+  function renderLogin() {
+    document.getElementById('sidebar').style.display = 'none';
+    document.getElementById('main').innerHTML = `
+      <div class="login-shell">
+        <div class="login-card">
+          <div class="login-brand">
+            <div class="sb-logo">R</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#0f172a">Abisaki's RMS</div>
+              <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Rental Management System</div>
+            </div>
+          </div>
+          <div class="login-title">Welcome back</div>
+          <div class="login-sub">Sign in to manage your properties</div>
+          <div class="login-err" id="lErr"></div>
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input class="form-input" id="lUser" type="text" placeholder="admin" autofocus/>
+          </div>
+          <div class="form-group" style="margin-bottom:22px">
+            <label class="form-label">Password</label>
+            <input class="form-input" id="lPass" type="password" placeholder="••••••••"
+              onkeydown="if(event.key==='Enter')login()"/>
+          </div>
+          <button class="btn-enterprise" style="font-size:13px;padding:12px" onclick="login()">
+            Sign In &nbsp;<i class="fa fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>`;
+  }
+
+  async function login() {
+    const u = document.getElementById('lUser').value.trim();
+    const p = document.getElementById('lPass').value;
+    const err = document.getElementById('lErr');
+    err.style.display = 'none';
+    try {
+      const d = await req('POST', '/auth/login', { username: u, password: p });
+      TOKEN = d.access_token;
+      localStorage.setItem('rms_token', TOKEN);
+      document.getElementById('uName').textContent   = u;
+      document.getElementById('uAvatar').textContent = u[0].toUpperCase();
+      document.getElementById('main').innerHTML = `
+        <div class="topbar">
+          <div class="topbar-left">
+            <h1 id="pgTitle">Control Panel</h1>
+            <p  id="pgSub">Your property portfolio at a glance</p>
+          </div>
+          <div class="topbar-right">
+            <button class="topbar-icon-btn" onclick="refreshCurrent()"><i class="fa fa-arrows-rotate"></i></button>
+          </div>
+        </div>
+        <div class="workspace" id="ws"></div>`;
+      boot();
+    } catch(e) {
+      err.textContent   = 'Invalid username or password. Please try again.';
+      err.style.display = 'block';
+    }
+  }
+
+  function doLogout() {
+    confirm2('Sign Out', 'You will be signed out of the portal.', () => {
+      TOKEN = ''; localStorage.removeItem('rms_token'); location.reload();
+    });
+  }
+
+  /* ── SIDEBAR TOGGLE ── */
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+  }
+
+  /* ── NAV ── */
+  function navTo(page, el) {
+    document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+    if (el) el.classList.add('active');
+    curPage = page;
+    loadPage(page);
+  }
+
+  function loadPage(page) {
+    const meta = {
+      dashboard: ['Control Panel',  'Your property portfolio at a glance'],
+      tenants:   ['Tenants',        'Manage tenant profiles and leases'],
+      units:     ['Units',          'Manage rental units and availability'],
+      payments:  ['Payments',       'All financial transactions'],
+      billing:   ['Billing',        'Monthly billing cycles and invoices'],
+    };
+    const [t, s] = meta[page] || ['RMS',''];
+    const tEl = document.getElementById('pgTitle');
+    const sEl = document.getElementById('pgSub');
+    if (tEl) tEl.textContent = t;
+    if (sEl) sEl.textContent = s;
+    const map = { dashboard: pgDashboard, tenants: pgTenants, units: pgUnits, payments: pgPayments, billing: pgBilling };
+    if (map[page]) map[page]();
+  }
+
+  function refreshCurrent() { loadPage(curPage); }
+
+  /* ── TOAST ── */
+  function toast(msg, type='s') {
+    const icons = { s:'fa-circle-check', e:'fa-circle-xmark', i:'fa-circle-info' };
+    const el = document.createElement('div');
+    el.className = `toast t${type}`;
+    el.innerHTML = `<i class="fa ${icons[type]}"></i><span>${msg}</span>`;
+    document.getElementById('toasts').appendChild(el);
+    setTimeout(() => {
+      el.style.animation = 'tslideout 0.3s ease forwards';
+      setTimeout(() => el.remove(), 300);
+    }, 4200);
+  }
+
+  /* ── CONFIRM ── */
+  function confirm2(title, msg, cb) {
+    document.getElementById('cfmTitle').textContent = title;
+    document.getElementById('cfmMsg').textContent   = msg;
+    document.getElementById('cfmOk').onclick = () => { closeOverlay('cfmOverlay'); cb(); };
+    openOverlay('cfmOverlay');
+  }
+  function openOverlay(id)  { document.getElementById(id).classList.add('open'); }
+  function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+
+  /* ── HELPERS ── */
+  function fmt(n) { return Number(n||0).toLocaleString('en-KE'); }
+  function balCell(b) {
+    if (b > 0) return `<span class="bal-debt">KES ${fmt(b)}</span>`;
+    if (b < 0) return `<span class="bal-credit">Credit KES ${fmt(Math.abs(b))}</span>`;
+    return `<span class="bal-clear">Cleared</span>`;
+  }
+  const COLORS = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#ec4899','#06b6d4','#ef4444','#14b8a6'];
+  function initials(n) { return n.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase(); }
+  function hintErr(id, show) {
+    const el = document.getElementById(id); if(!el) return;
+    el.classList.toggle('show', show);
+    const inp = el.previousElementSibling;
+    if (inp) inp.classList.toggle('err', show);
+  }
+  function countUp(id, target) {
+    const el = document.getElementById(id); if(!el) return;
+    let v=0; const step = Math.max(1, Math.ceil(target/28));
+    const t = setInterval(() => {
+      v = Math.min(v+step, target); el.textContent = v;
+      if (v>=target) clearInterval(t);
+    }, 28);
+  }
+
+  /* ── DASHBOARD ── */
+  async function pgDashboard() {
+    const ws = document.getElementById('ws'); if(!ws) return;
+    ws.innerHTML = `
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-top">
+            <div><div class="metric-value" id="mUnits">—</div><div class="metric-label">Total Units</div></div>
+            <div class="metric-icon mi-amber"><i class="fa fa-building"></i></div>
+          </div>
+          <div class="metric-trend"><i class="fa fa-circle-dot" style="color:#f59e0b"></i> Registered properties</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-top">
+            <div><div class="metric-value" id="mOcc">—</div><div class="metric-label">Occupied</div></div>
+            <div class="metric-icon mi-blue"><i class="fa fa-door-open"></i></div>
+          </div>
+          <div class="metric-trend"><i class="fa fa-circle-dot" style="color:#3b82f6"></i> Active tenancies</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-top">
+            <div><div class="metric-value" id="mDebt" style="font-size:20px;padding-top:4px">—</div><div class="metric-label">Outstanding Debt</div></div>
+            <div class="metric-icon mi-rose"><i class="fa fa-triangle-exclamation"></i></div>
+          </div>
+          <div class="metric-trend"><i class="fa fa-circle-dot" style="color:#f43f5e"></i> Pending collection</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-top">
+            <div><div class="metric-value" id="mCol" style="font-size:20px;padding-top:4px">—</div><div class="metric-label">Total Collections</div></div>
+            <div class="metric-icon mi-emerald"><i class="fa fa-arrow-trend-up"></i></div>
+          </div>
+          <div class="metric-trend"><i class="fa fa-circle-dot" style="color:#10b981"></i> Confirmed receipts</div>
+        </div>
+      </div>
+      <div class="split">
+        <div id="tSection"></div>
+        <div id="fSection"></div>
+      </div>`;
+
+    try {
+      const d = await req('GET', '/dashboard/');
+      countUp('mUnits', d.total_units);
+      countUp('mOcc',   d.occupied_units);
+      document.getElementById('mDebt').textContent = `KES ${fmt(d.total_outstanding_debt)}`;
+      document.getElementById('mCol').textContent  = `KES ${fmt(d.total_collections)}`;
+    } catch(e) { toast('Could not load metrics','e'); }
+
+    buildTenantTable('tSection');
+    buildForms('fSection');
+  }
+
+  /* ── TENANT TABLE ── */
+  async function buildTenantTable(cid) {
+    const c = document.getElementById(cid); if(!c) return;
+    c.innerHTML = `<div class="panel"><div style="padding:20px;display:flex;align-items:center;gap:10px;color:#94a3b8;font-size:13px"><div class="spin"></div> Loading tenants…</div></div>`;
+    try {
+      tenants = await req('GET', '/tenants/');
+      drawTable(cid, tenants);
+    } catch(e) {
+      c.innerHTML = `<div class="panel"><div class="empty-state"><i class="fa fa-circle-exclamation"></i><p>Failed to load tenants</p></div></div>`;
+    }
+  }
+
+  function drawTable(cid, list) {
+    const c = document.getElementById(cid); if(!c) return;
+    if (!list.length) {
+      c.innerHTML = `<div class="panel"><div class="empty-state"><i class="fa fa-users"></i><p>No tenants onboarded yet</p><small>Use the form to add your first tenant</small></div></div>`;
+      return;
+    }
+    const rows = list.map((t,i) => {
+      const col = COLORS[i % COLORS.length];
+      return `
+        <tr onclick="expandRow(${t.id})">
+          <td>
+            <div class="t-cell">
+              <div class="t-avatar" style="background:${col}">${initials(t.name)}</div>
+              <div><div class="t-name">${t.name}</div><div class="t-sub">ID #${t.id}</div></div>
+            </div>
+          </td>
+          <td style="color:#475569">${t.phone_number}</td>
+          <td><span class="badge badge-blue">Unit ${t.unit_id}</span></td>
+          <td>${balCell(t.balance)}</td>
+          <td>
+            <div class="act-row" onclick="event.stopPropagation()">
+              <button class="act act-green" onclick="openSTK(${t.id},'${t.name}','${t.phone_number}',${t.balance})">
+                <i class="fa fa-mobile-screen-button"></i> M-Pesa
+              </button>
+              <button class="act act-blue" onclick="loadHistory(${t.id})">
+                <i class="fa fa-clock-rotate-left"></i>
+              </button>
+              <button class="act act-red" onclick="offboard(${t.id},'${t.name}')">
+                <i class="fa fa-user-minus"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="expand-row" id="exp-${t.id}">
+          <td colspan="5" style="padding:0">
+            <div class="expand-body">
+              <div class="expand-inner" id="hist-${t.id}">
+                <div class="expand-title">Payment History</div>
+                <div class="expand-empty">Click <i class="fa fa-clock-rotate-left"></i> to load transaction history</div>
+              </div>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+
+    c.innerHTML = `
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <div class="panel-title-icon pti-slate"><i class="fa fa-users"></i></div>
+            Tenant Directory
+          </div>
+          <div class="tbl-search-box">
+            <i class="fa fa-magnifying-glass"></i>
+            <input type="text" placeholder="Search name, phone…" oninput="filterTenants(this.value)"/>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr><th>Tenant</th><th>Phone</th><th>Unit</th><th>Balance</th><th>Actions</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div class="tbl-footer">
+          <span>${list.length} tenant${list.length!==1?'s':''}</span>
+          <span>${list.filter(t=>t.balance>0).length} with outstanding balance</span>
+        </div>
+      </div>`;
+  }
+
+  function filterTenants(q) {
+    const s = (q||'').toLowerCase();
+    drawTable('tSection', tenants.filter(t =>
+      t.name.toLowerCase().includes(s) ||
+      t.phone_number.includes(s) ||
+      String(t.unit_id).includes(s)
+    ));
+  }
+
+  function expandRow(id) {
+    document.getElementById(`exp-${id}`)?.classList.toggle('open');
+  }
+
+  async function loadHistory(tid) {
+    const exp  = document.getElementById(`exp-${tid}`);
+    const hist = document.getElementById(`hist-${tid}`);
+    if (!exp||!hist) return;
+    exp.classList.add('open');
+    hist.innerHTML = `<div class="expand-title">Payment History</div><div class="expand-empty"><div class="spin" style="margin:0 auto"></div></div>`;
+    try {
+      const all  = await req('GET', '/payments/');
+      const mine = all.filter(p => p.tenant_id===tid && p.status==='Confirmed');
+      if (!mine.length) {
+        hist.innerHTML = `<div class="expand-title">Payment History</div><div class="expand-empty">No confirmed payments yet</div>`;
+        return;
+      }
+      hist.innerHTML = `<div class="expand-title">Payment History</div>
+        ${mine.map(p=>`
+          <div class="hist-row">
+            <div>
+              <div class="hist-date">${new Date(p.timestamp).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})}</div>
+              <div class="hist-ref">${p.mpesa_receipt_number||p.payment_method}</div>
+            </div>
+            <div class="hist-amount">+ KES ${fmt(p.amount)}</div>
+          </div>`).join('')}`;
+    } catch(e) {
+      hist.innerHTML = `<div class="expand-title">Payment History</div><div class="expand-empty">Failed to load</div>`;
+    }
+  }
+
+  /* ── FORMS ── */
+  function buildForms(cid) {
+    const c = document.getElementById(cid); if(!c) return;
+    c.innerHTML = `
+      <div class="right-col">
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <div class="panel-title-icon pti-amber"><i class="fa fa-building"></i></div>
+              Register Unit
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label class="form-label">Unit Number</label>
+              <input class="form-input" id="fUnitNo" placeholder="e.g. A-04"/>
+              <div class="form-err" id="fUnitNoErr">Unit number is required</div>
+            </div>
+            <div class="form-group" style="margin-bottom:18px">
+              <label class="form-label">Monthly Rent (KES)</label>
+              <input class="form-input" id="fUnitRent" type="number" placeholder="e.g. 8,000"/>
+              <div class="form-err" id="fUnitRentErr">Rent amount is required</div>
+            </div>
+            <button class="btn-enterprise" onclick="addUnit()">
+              <i class="fa fa-plus"></i> Register Unit
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <div class="panel-title-icon pti-blue"><i class="fa fa-user-plus"></i></div>
+              Onboard Tenant
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input class="form-input" id="fTName" placeholder="e.g. Jane Muthoni"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input class="form-input" id="fTPhone" placeholder="e.g. 0712 345 678"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Assign Unit</label>
+              <select class="form-input" id="fTUnit"><option value="">Loading units…</option></select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div class="form-group">
+                <label class="form-label">Lease Start</label>
+                <input class="form-input" id="fTStart" type="date"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Lease End</label>
+                <input class="form-input" id="fTEnd" type="date"/>
+              </div>
+            </div>
+            <button class="btn-enterprise" style="margin-top:4px" onclick="addTenant()">
+              <i class="fa fa-user-plus"></i> Onboard Tenant
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <div class="panel-title-icon" style="background:#f0fdf4;color:#16a34a"><i class="fa fa-money-bill-wave"></i></div>
+              Record Payment
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label class="form-label">Tenant</label>
+              <select class="form-input" id="fPTenant"><option value="">Select tenant…</option></select>
+            </div>
+            <div class="form-group" style="margin-bottom:18px">
+              <label class="form-label">Amount (KES)</label>
+              <input class="form-input" id="fPAmt" type="number" placeholder="e.g. 5,000"/>
+            </div>
+            <button class="btn-enterprise" onclick="addPayment()">
+              <i class="fa fa-check"></i> Record Payment
+            </button>
+          </div>
+        </div>
+
+      </div>`;
+    fillUnitDrop();
+    fillTenantDrop();
+  }
+
+  async function fillUnitDrop() {
+    try {
+      const units = await req('GET', '/units/');
+      const vacant = units.filter(u => !u.is_occupied);
+      const sel = document.getElementById('fTUnit'); if(!sel) return;
+      sel.innerHTML = vacant.length
+        ? vacant.map(u=>`<option value="${u.id}">${u.unit_number} — KES ${fmt(u.rent_amount)}/mo</option>`).join('')
+        : '<option value="">No vacant units available</option>';
+    } catch(e) {}
+  }
+
+  async function fillTenantDrop() {
+    try {
+      const ts  = await req('GET', '/tenants/');
+      const sel = document.getElementById('fPTenant'); if(!sel) return;
+      sel.innerHTML = ts.length
+        ? ts.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')
+        : '<option value="">No tenants found</option>';
+    } catch(e) {}
+  }
+
+  async function addUnit() {
+    const no   = document.getElementById('fUnitNo')?.value.trim();
+    const rent = document.getElementById('fUnitRent')?.value.trim();
+    let ok = true;
+    if (!no)   { hintErr('fUnitNoErr',   true); ok=false; } else hintErr('fUnitNoErr',   false);
+    if (!rent) { hintErr('fUnitRentErr', true); ok=false; } else hintErr('fUnitRentErr', false);
+    if (!ok) return;
+    try {
+      await req('POST', '/units/', { unit_number: no, rent_amount: parseFloat(rent) });
+      toast(`Unit ${no} registered successfully`);
+      document.getElementById('fUnitNo').value   = '';
+      document.getElementById('fUnitRent').value = '';
+      pgDashboard();
+    } catch(e) { toast(e.message,'e'); }
+  }
+
+  async function addTenant() {
+    const name  = document.getElementById('fTName')?.value.trim();
+    const phone = document.getElementById('fTPhone')?.value.trim();
+    const unit  = document.getElementById('fTUnit')?.value;
+    const start = document.getElementById('fTStart')?.value;
+    const end   = document.getElementById('fTEnd')?.value;
+    if (!name||!phone||!unit||!start||!end) { toast('Please fill in all fields','e'); return; }
+    try {
+      await req('POST', '/tenants/', {
+        name, phone_number:phone, unit_id:parseInt(unit),
+        lease_start_date:start, lease_end_date:end
+      });
+      toast(`${name} onboarded successfully`);
+      ['fTName','fTPhone','fTStart','fTEnd'].forEach(id => {
+        const el = document.getElementById(id); if(el) el.value='';
+      });
+      pgDashboard();
+    } catch(e) { toast(e.message,'e'); }
+  }
+
+  async function addPayment() {
+    const tid = document.getElementById('fPTenant')?.value;
+    const amt = document.getElementById('fPAmt')?.value;
+    if (!tid||!amt) { toast('Please fill in all fields','e'); return; }
+    try {
+      await req('POST', '/payments/manual', { tenant_id:parseInt(tid), amount:parseFloat(amt) });
+      toast(`Payment of KES ${fmt(amt)} recorded`);
+      const el = document.getElementById('fPAmt'); if(el) el.value='';
+      pgDashboard();
+    } catch(e) { toast(e.message,'e'); }
+  }
+
+  /* ── STK ── */
+  function openSTK(id, name, phone, bal) {
+    stkId = id;
+    document.getElementById('mName').textContent  = name;
+    document.getElementById('mPhone').textContent = phone;
+    document.getElementById('mBal').textContent   = bal>0 ? `KES ${fmt(bal)}` : 'Cleared';
+    document.getElementById('stkAmt').value       = bal>0 ? Math.ceil(bal) : '';
+    openOverlay('stkOverlay');
+  }
+
+  async function sendSTK() {
+    const amt = parseInt(document.getElementById('stkAmt').value);
+    if (!amt||amt<1) { toast('Enter a valid amount','e'); return; }
+    const btn = document.getElementById('stkBtn');
+    btn.innerHTML = '<div class="spin" style="border-top-color:#fff;border-color:rgba(255,255,255,.3)"></div> Sending…';
+    btn.disabled  = true;
+    try {
+      await req('POST', '/mpesa/stk-push', { tenant_id:stkId, amount:amt });
+      closeOverlay('stkOverlay');
+      toast('STK Push sent — tenant should enter PIN now','i');
+    } catch(e) { toast(e.message,'e'); }
+    finally {
+      btn.innerHTML = '<i class="fa fa-paper-plane"></i> Send Push';
+      btn.disabled  = false;
+    }
+  }
+
+  /* ── OFFBOARD ── */
+  function offboard(id, name) {
+    confirm2('Offboard Tenant', `This will remove ${name} and free their unit.`, async () => {
+      try {
+        await req('POST', `/tenants/${id}/offboard`);
+        toast(`${name} offboarded successfully`);
+        pgDashboard();
+      } catch(e) { toast(e.message,'e'); }
+    });
+  }
+
+  /* ── PAGES ── */
+  async function pgTenants() {
+    const ws = document.getElementById('ws'); if(!ws) return;
+    ws.innerHTML = `<div id="tSection"></div>`;
+    buildTenantTable('tSection');
+  }
+
+  async function pgUnits() {
+    const ws = document.getElementById('ws'); if(!ws) return;
+    ws.innerHTML = `<div class="panel"><div style="padding:20px;display:flex;align-items:center;gap:10px;color:#94a3b8;font-size:13px"><div class="spin"></div> Loading…</div></div>`;
+    try {
+      const units = await req('GET', '/units/');
+      if (!units.length) {
+        ws.innerHTML = `<div class="panel"><div class="empty-state"><i class="fa fa-building"></i><p>No units registered yet</p><small>Register your first unit from the Control Panel</small></div></div>`;
+        return;
+      }
+      ws.innerHTML = `
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <div class="panel-title-icon pti-amber"><i class="fa fa-building"></i></div>
+              Rental Units
+            </div>
+            <span class="badge badge-slate">${units.length} unit${units.length!==1?'s':''}</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Unit</th><th>Monthly Rent</th><th>Status</th><th>Occupancy</th><th>Registered</th></tr></thead>
+              <tbody>
+                ${units.map(u=>`
+                  <tr>
+                    <td style="font-weight:700;color:#0f172a">${u.unit_number}</td>
+                    <td style="font-weight:600">KES ${fmt(u.rent_amount)}</td>
+                    <td><span class="badge ${u.status==='Active'?'badge-green':'badge-amber'}">${u.status}</span></td>
+                    <td>
+                      <span class="badge ${u.is_occupied?'badge-red':'badge-green'}">
+                        <span class="dot ${u.is_occupied?'dot-red':'dot-green'}"></span>
+                        ${u.is_occupied?'Occupied':'Vacant'}
+                      </span>
+                    </td>
+                    <td style="color:#94a3b8;font-size:12px">${new Date(u.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="tbl-footer">
+            <span>${units.filter(u=>!u.is_occupied).length} vacant</span>
+            <span>${units.filter(u=>u.is_occupied).length} occupied</span>
+          </div>
+        </div>`;
+    } catch(e) { toast('Failed to load units','e'); }
+  }
+
+  async function pgPayments() {
+    const ws = document.getElementById('ws'); if(!ws) return;
+    ws.innerHTML = `<div class="panel"><div style="padding:20px;display:flex;align-items:center;gap:10px;color:#94a3b8;font-size:13px"><div class="spin"></div> Loading…</div></div>`;
+    try {
+      const payments = await req('GET', '/payments/');
+      if (!payments.length) {
+        ws.innerHTML = `<div class="panel"><div class="empty-state"><i class="fa fa-credit-card"></i><p>No payments recorded yet</p></div></div>`;
+        return;
+      }
+      const confirmed = payments.filter(p=>p.status==='Confirmed');
+      const total     = confirmed.reduce((s,p)=>s+p.amount,0);
+      ws.innerHTML = `
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <div class="panel-title-icon" style="background:#f0fdf4;color:#16a34a"><i class="fa fa-credit-card"></i></div>
+              Payment Transactions
+            </div>
+            <span class="badge badge-slate">${payments.length} record${payments.length!==1?'s':''}</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Receipt</th><th>Tenant</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                ${payments.map(p=>`
+                  <tr>
+                    <td style="font-family:monospace;font-size:11px;color:#64748b">${p.mpesa_receipt_number||'—'}</td>
+                    <td style="color:#475569">#${p.tenant_id}</td>
+                    <td style="font-weight:700;color:#0f172a">KES ${fmt(p.amount)}</td>
+                    <td style="color:#64748b;font-size:12px">${p.payment_method}</td>
+                    <td>
+                      <span class="badge ${p.status==='Confirmed'?'badge-green':p.status==='Pending'?'badge-amber':'badge-red'}">
+                        <span class="dot ${p.status==='Confirmed'?'dot-green':p.status==='Pending'?'dot-amber':'dot-red'}"></span>
+                        ${p.status}
+                      </span>
+                    </td>
+                    <td style="color:#94a3b8;font-size:11px">${new Date(p.timestamp).toLocaleString('en-KE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="tbl-footer">
+            <span>${confirmed.length} confirmed</span>
+            <span style="font-weight:600;color:#10b981">Total collected: KES ${fmt(total)}</span>
+          </div>
+        </div>`;
+    } catch(e) { toast('Failed to load payments','e'); }
+  }
+
+  async function pgBilling() {
+    const ws = document.getElementById('ws'); if(!ws) return;
+    ws.innerHTML = `<div class="panel"><div style="padding:20px;display:flex;align-items:center;gap:10px;color:#94a3b8;font-size:13px"><div class="spin"></div> Loading…</div></div>`;
+    try {
+      const inv = await req('GET', '/billing/logs');
+      ws.innerHTML = `
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <div class="panel-title-icon pti-amber"><i class="fa fa-file-invoice-dollar"></i></div>
+              Billing & Invoices
+            </div>
+            <button onclick="triggerBilling()" style="display:inline-flex;align-items:center;gap:7px;padding:7px 14px;background:#0f172a;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+              <i class="fa fa-bolt"></i> Run Billing Now
+            </button>
+          </div>
+          ${inv.length ? `
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Tenant</th><th>Amount</th><th>Period</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                ${inv.map(i=>`
+                  <tr>
+                    <td style="color:#94a3b8;font-size:11px">#${i.id}</td>
+                    <td style="color:#475569">#${i.tenant_id}</td>
+                    <td style="font-weight:700">KES ${fmt(i.amount)}</td>
+                    <td style="color:#475569">${i.billing_period}</td>
+                    <td>
+                      <span class="badge ${i.status==='Paid'?'badge-green':i.status==='Partially Paid'?'badge-amber':'badge-red'}">
+                        ${i.status}
+                      </span>
+                    </td>
+                    <td style="color:#94a3b8;font-size:11px">${new Date(i.created_at).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="tbl-footer"><span>${inv.length} invoice${inv.length!==1?'s':''}</span></div>
+          ` : `<div class="empty-state"><i class="fa fa-file-invoice-dollar"></i><p>No billing runs yet</p><small>Click "Run Billing Now" to charge all active tenants</small></div>`}
+        </div>`;
+    } catch(e) { toast('Failed to load billing','e'); }
+  }
+
+  function triggerBilling() {
+    confirm2('Run Billing Cycle', 'This will add rent charges to all active tenants. Continue?', async () => {
+      try {
+        const r = await req('POST', '/billing/run');
+        toast(`Billing complete — ${r.tenants_charged} tenants charged`,'i');
+        curPage==='billing' ? pgBilling() : pgDashboard();
+      } catch(e) { toast(e.message,'e'); }
+    });
+  }
+  function toggleTheme() {
+    const root = document.documentElement;
+    const isDark = root.getAttribute('data-theme') === 'dark';
+    root.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('rms_theme', isDark ? 'light' : 'dark');
+    document.getElementById('themeIcon').className = isDark
+      ? 'fa-regular fa-moon'
+      : 'fa-regular fa-sun';
+  }
+  (function() {
+    const saved = localStorage.getItem('rms_theme');
+    if (saved === 'dark') {
+      document.documentElement.setAttribute('data-theme','dark');
+      const icon = document.getElementById('themeIcon');
+      if (icon) icon.className = 'fa-regular fa-sun';
+    }
+  })();
+</script>
+</body>
+</html>
