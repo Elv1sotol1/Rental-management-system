@@ -662,6 +662,30 @@
       <i class="fa fa-chart-pie"></i>
       <span class="sidebar-text">Control Panel</span>
     </button>
+    <button class="nav-link" onclick="navTo('tenants',this)">
+      <i class="fa fa-users"></i>
+      <span class="sidebar-text">Tenants</span>
+    </button>
+    <button class="nav-link" onclick="navTo('units',this)">
+      <i class="fa fa-building"></i>
+      <span class="sidebar-text">Units</span>
+    </button>
+
+    <div class="sb-section-label">Finance</div>
+    <button class="nav-link" onclick="navTo('payments',this)">
+      <i class="fa fa-credit-card"></i>
+      <span class="sidebar-text">Payments</span>
+    </button>
+    <button class="nav-link" onclick="navTo('billing',this)">
+      <i class="fa fa-file-invoice-dollar"></i>
+      <span class="sidebar-text">Billing</span>
+    </button>
+
+    <div class="sb-section-label">Quick Actions</div>
+    <button class="nav-link" onclick="triggerBilling()">
+      <i class="fa fa-bolt"></i>
+      <span class="sidebar-text">Run Billing</span>
+    </button>
   </nav>
 
   <div class="sb-footer">
