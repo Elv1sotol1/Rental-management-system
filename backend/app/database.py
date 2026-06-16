@@ -14,7 +14,16 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(
+    DATABASE_URL,
+    echo=True,
+    connect_args={
+        "ssl": {
+            "ssl_ca": None,
+            "check_hostname": False,
+        }
+    }
+)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
