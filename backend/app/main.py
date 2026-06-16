@@ -6,6 +6,10 @@ from app.scheduler import start_scheduler, stop_scheduler
 
 Base.metadata.create_all(bind=engine)
 
+# Run alembic migrations on startup
+import subprocess
+subprocess.run(["alembic", "upgrade", "head"], cwd="/app")
+
 app = FastAPI(
     title="Rental Management System API",
     description="Property & Lease Management Platform",
